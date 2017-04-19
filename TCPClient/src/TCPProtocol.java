@@ -12,7 +12,7 @@ import java.net.UnknownHostException;
 import javax.swing.*;
 import java.awt.event.*;
 
-public class TCPClient implements Runnable {
+public class TCPProtocol implements Runnable {
 
 	// The client socket
 	private static Socket clientSocket = null;
@@ -20,21 +20,35 @@ public class TCPClient implements Runnable {
 	private static PrintStream os = null;
 	// The input stream
 	private static DataInputStream is = null;
-
+	// Reader for text input
 	private static BufferedReader inputLine = null;
+	// Boolean for closing the socket
 	private static boolean closed = false;
+	// Setting up the server response for the client
+	static String serverResponse = null;
+	// Instancing the window
+	private static Window window;
+
+	public TCPProtocol(Window window) {
+		TCPProtocol.window = window;
+	}
+
+	// Function for sending the command to the server
+	public void sendCommand(String command) {
+		os.println(command);
+	}
 
 	public static void main(String[] args) {
 
 		// The default port.
 		int portNumber = 25565;
 		// The default host.
-		String host = "178.62.110.12";
+		String host = "138.68.191.170";
 
-		new Window();
+		window = Window.getWindow();
 
 		if (args.length < 2) {
-			System.out.println("Usage: java MultiThreadChatClient <host> <portNumber>\n" + "Now using host=" + host
+			window.setServerResponse("Usage: java MultiThreadChatClient <host> <portNumber>\n" + "Now using host=" + host
 					+ ", portNumber=" + portNumber);
 		} else {
 			host = args[0];
@@ -50,6 +64,7 @@ public class TCPClient implements Runnable {
 			inputLine = new BufferedReader(new InputStreamReader(System.in));
 			os = new PrintStream(clientSocket.getOutputStream());
 			is = new DataInputStream(clientSocket.getInputStream());
+			
 		} catch (UnknownHostException e) {
 			System.err.println("Don't know about host " + host);
 		} catch (IOException e) {
@@ -64,14 +79,19 @@ public class TCPClient implements Runnable {
 			try {
 
 				/* Create a thread to read from the server. */
-				new Thread(new TCPClient()).start();
-				while (!closed) {
-					os.println(inputLine.readLine().trim());
-				}
+				Thread thread = new Thread(new TCPProtocol(window));
+				thread.start();
+				
 				/*
 				 * Close the output stream, close the input stream, close the
 				 * socket.
 				 */
+				while (!closed) {
+					if (thread == null || window == null) {
+						closed = true;
+					}
+					// os.println(inputLine.readLine().trim());
+				}
 				os.close();
 				is.close();
 				clientSocket.close();
@@ -87,8 +107,6 @@ public class TCPClient implements Runnable {
 	 * @see java.lang.Runnable#run()
 	 */
 
-	static String serverResponse = null;
-
 	@SuppressWarnings("deprecation")
 	public void run() {
 		/*
@@ -97,10 +115,9 @@ public class TCPClient implements Runnable {
 		 */
 		String responseLine;
 		try {
-			while ((responseLine = is.readLine()) != null) {
-				System.out.println(responseLine);
-				serverResponse = responseLine;
-				if (responseLine.indexOf("*** Bye") != -1)
+			while ((responseLine = is.readLine()) != null && closed == false) {
+				window.setServerResponse(responseLine);
+				if (responseLine.indexOf("Ending Session!") != -1)
 					break;
 			}
 			closed = true;
@@ -108,8 +125,5 @@ public class TCPClient implements Runnable {
 			System.err.println("IOException:  " + e);
 		}
 
-
 	}
 }
-
-
