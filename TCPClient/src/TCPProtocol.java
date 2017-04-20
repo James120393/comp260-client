@@ -25,7 +25,7 @@ public class TCPProtocol implements Runnable {
 	// Boolean for closing the socket
 	private static boolean closed = false;
 	// Setting up the server response for the client
-	static String serverResponse = null;
+	public String serverResponse = null;
 	// Instancing the window
 	private static Window window;
 

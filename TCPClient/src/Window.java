@@ -1,16 +1,23 @@
 import javax.swing.*;
 import java.awt.event.*;
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import javax.swing.JFrame;
+import javax.swing.text.DefaultCaret;
 
-class Window implements ActionListener {
-	private static JTextArea serverInArea;
-	private static JTextArea serverOutArea;
+/*
+ * Window class to set up input area
+ */
+public class Window implements ActionListener {
+	private JFrame frame;
+	private JTextArea InputArea = new JTextArea("");
+	private JTextArea OutputArea = new JTextArea("");
+	private JScrollPane scrollPane = new JScrollPane(OutputArea);
 	private TCPProtocol tcpProtocol;
 	private static Window window = new Window();
 	private String command;
 
+	/*
+	 * Returns the window
+	 */
 	public static Window getWindow() {
 		return window;
 	}
@@ -20,25 +27,37 @@ class Window implements ActionListener {
 	}
 
 	private Window() {
-		JFrame f = new JFrame();
-		serverOutArea = new JTextArea();
-		serverOutArea.setBounds(10, 50, 500, 200);
-		serverOutArea.setEditable(false);
+		frame = new JFrame("260Client");
+	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    
+		scrollPane.setBounds(10, 10, 500, 350);
+		
+		OutputArea.setEditable(false);
+		OutputArea.setLineWrap(true);
+		OutputArea.setWrapStyleWord(true);
+		OutputArea.addComponentListener(null);
+		DefaultCaret caret = (DefaultCaret) OutputArea.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
+		
+		InputArea.setLineWrap(true);
+		InputArea.setWrapStyleWord(true);
+		InputArea.setBounds(10, 400, 500, 50);
+		InputArea.addComponentListener(null);
+		InputArea.setColumns(1);
 
-		serverInArea = new JTextArea();
-		serverInArea.setBounds(10, 300, 500, 30);
+		frame.add(InputArea);
+		frame.add(scrollPane);
+		frame.setSize(525, 500);
+		frame.setLayout(null);
+		frame.setVisible(true);
+		frame.setResizable(false);
+		frame.setLocationRelativeTo(null);
 
-		f.add(serverInArea);
-		f.add(serverOutArea);
-		f.setSize(550, 500);
-		f.setLayout(null);
-		f.setVisible(true);
-
-		serverInArea.addKeyListener(new KeyAdapter() {
+		InputArea.addKeyListener(new KeyAdapter() {
 			public void keyPressed(KeyEvent keyPressed) {
 				if (keyPressed.getKeyCode() == KeyEvent.VK_ENTER) {
-					command = serverInArea.getText();
-					serverInArea.setText("");
+					command = InputArea.getText();
+					InputArea.setText("");
 					tcpProtocol.sendCommand(command.trim());
 				}
 			}
@@ -47,12 +66,17 @@ class Window implements ActionListener {
 	}
 
 	public void readServerResponse() {
-		serverOutArea.setText(serverInArea.getText() + tcpProtocol.serverResponse);
-		serverOutArea.append(tcpProtocol.serverResponse + "\n");
+		OutputArea.setText(InputArea.getText() + tcpProtocol.serverResponse);
+		OutputArea.append(tcpProtocol.serverResponse + "\n");
 	}
 
 	public void setServerResponse(String message) {
-		serverOutArea.append(message + "\n");
-		}
+		OutputArea.append(message + "\n");
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent arg0) {
+
+	}
 
 }

@@ -10,5 +10,4 @@ public class Client {
 		window.setTcpService(tcpProtocol);
 		TCPProtocol.main(args);
 	}
-
 }
