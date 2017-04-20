@@ -1,4 +1,3 @@
-
 import java.io.DataInputStream;
 import java.io.PrintStream;
 import java.awt.event.ActionEvent;
@@ -12,85 +11,103 @@ import java.net.UnknownHostException;
 import javax.swing.*;
 import java.awt.event.*;
 
-public class TCPProtocol implements Runnable {
+/*
+ * Original Source From 
+ * http://makemobiapps.blogspot.co.uk/p/multiple-client-server-chat-programming.html
+ * Heavily modified
+ */
 
-	// The client socket
+public class TCPProtocol implements Runnable {
+	/*
+	 * The client socket
+	 */
 	private static Socket clientSocket = null;
-	// The output stream
+
+	/*
+	 * The output stream
+	 */
 	private static PrintStream os = null;
-	// The input stream
+
+	/*
+	 * The input stream
+	 */
 	private static DataInputStream is = null;
-	// Reader for text input
-	private static BufferedReader inputLine = null;
-	// Boolean for closing the socket
+
+	/*
+	 * Boolean for closing the socket
+	 */
 	private static boolean closed = false;
-	// Setting up the server response for the client
+
+	/*
+	 * Setting up the server response for the client
+	 */
 	public String serverResponse = null;
-	// Instancing the window
+
+	/*
+	 * Instancing the window
+	 */
 	private static Window window;
 
+	/*
+	 * Setting the instance of the window for thread use
+	 */
 	public TCPProtocol(Window window) {
 		TCPProtocol.window = window;
 	}
 
-	// Function for sending the command to the server
+	/*
+	 * Function for sending the command to the server
+	 */
 	public void sendCommand(String command) {
 		os.println(command);
 	}
 
+	/*
+	 * Main function for the networking between the client and sever
+	 */
 	public static void main(String[] args) {
-
 		// The default port.
 		int portNumber = 25565;
+
 		// The default host.
 		String host = "138.68.191.170";
 
+		// Getting the instance of the window
 		window = Window.getWindow();
 
+		// Tell the user what port and IP address is being used
 		if (args.length < 2) {
-			window.setServerResponse("Usage: java MultiThreadChatClient <host> <portNumber>\n" + "Now using host=" + host
-					+ ", portNumber=" + portNumber);
+			window.setServerResponse("Now using host=" + host + ", portNumber=" + portNumber);
 		} else {
 			host = args[0];
 			portNumber = Integer.valueOf(args[1]).intValue();
 		}
 
-		/*
-		 * Open a socket on a given host and port. Open input and output
-		 * streams.
-		 */
+		// Open a socket on a given host and port. Open input and output streams
 		try {
 			clientSocket = new Socket(host, portNumber);
-			inputLine = new BufferedReader(new InputStreamReader(System.in));
 			os = new PrintStream(clientSocket.getOutputStream());
 			is = new DataInputStream(clientSocket.getInputStream());
-			
 		} catch (UnknownHostException e) {
 			System.err.println("Don't know about host " + host);
 		} catch (IOException e) {
 			System.err.println("Couldn't get I/O for the connection to the host " + host);
 		}
 
-		/*
-		 * If everything has been initialized then we want to write some data to
-		 * the socket we have opened a connection to on the port portNumber.
-		 */
+		// If everything has been initialized then write some data to the socket
+		// we have opened a connection too on the port portNumber.
 		if (clientSocket != null && os != null && is != null) {
 			try {
-
-				/* Create a thread to read from the server. */
+				// Create a thread to read from the server.
 				Thread thread = new Thread(new TCPProtocol(window));
 				thread.start();
-				
-				/*
-				 * Close the output stream, close the input stream, close the
-				 * socket.
-				 */
+
+				// Close the output stream, close the input stream, close the
+				// socket.
 				while (!closed) {
 					if (thread == null || window == null) {
 						closed = true;
 					}
-					// os.println(inputLine.readLine().trim());
 				}
 				os.close();
 				is.close();
@@ -102,17 +119,12 @@ public class TCPProtocol implements Runnable {
 	}
 
 	/*
-	 * Create a thread to read from the server. (non-Javadoc)
-	 * 
-	 * @see java.lang.Runnable#run()
+	 * Create a thread to read from the server Ignore deprecation warning
 	 */
-
 	@SuppressWarnings("deprecation")
 	public void run() {
-		/*
-		 * Keep on reading from the socket till we receive "Bye" from the
-		 * server. Once we received that then we want to break.
-		 */
+		// Keep on reading from the socket till we receive "Ending Session!"
+		// from the server. Once we received that then we want to break.
 		String responseLine;
 		try {
 			while ((responseLine = is.readLine()) != null && closed == false) {
